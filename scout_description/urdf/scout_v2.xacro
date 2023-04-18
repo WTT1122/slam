@@ -1,0 +1,202 @@
+<?xml version="1.0"?>
+
+<robot name="scout_v2" 
+    xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="robot_namespace" default="/" /> 
+
+    <xacro:include filename="../urdf/scout_wheel_type1.xacro" />
+    <xacro:include filename="../urdf/scout_wheel_type2.xacro" />
+
+    <!-- Variables -->
+    <xacro:property name="M_PI" value="3.14159"/>
+
+    <!-- Vehicle Geometries -->
+    <xacro:property name="base_x_size" value="0.9250000" />
+    <xacro:property name="base_y_size" value="0.380000" />
+    <xacro:property name="base_z_size" value="0.210000" />
+
+    <xacro:property name="wheelbase" value="0.498" />
+    <xacro:property name="track" value="0.58306" />
+    <xacro:property name="wheel_vertical_offset" value="-0.0702" />
+
+    <xacro:property name="wheel_length" value="1.1653e-01" />
+    <xacro:property name="wheel_radius" value="1.6459e-01" />
+
+
+    <xacro:property name="framework_z_size" value="0.42" />
+    <xacro:property name="lidar_z_size" value="0.038" />
+    <xacro:property name="camera_z_size" value="0.075" />
+    <xacro:property name="imu_z_size" value="0.015" />
+
+    <!-- Base link -->
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="../meshes/base_link.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.008" rpy="0 0 0" />
+            <geometry>
+                <box size="${base_x_size} ${base_y_size} ${base_z_size}"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0 ${base_z_size/6}" rpy="0 0 0" />
+            <geometry>
+                <box size="${base_x_size/6} ${base_y_size*1.65} ${base_z_size/3}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="base_footprint">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_footprint_joint" type="fixed">
+        <origin xyz="0 0 ${wheel_radius - wheel_vertical_offset}" rpy="0 0 0" />
+        <parent link="base_footprint" />
+        <child link="base_link" />
+    </joint>
+
+    <link name="inertial_link">
+        <inertial>
+            <mass value="40" />
+            <origin xyz="0.0 0.0 0.0" />
+            <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465" />
+        </inertial>
+    </link>
+
+    <joint name="inertial_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="inertial_link" />
+    </joint>
+
+    <link name="framework">
+        <visual>
+            <geometry>
+                <mesh filename="../meshes/framework.dae"/>
+                <box size="0.2 0.8 0.42" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.2 0.8 0.42" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="4"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <joint name="base_link2framework" type="fixed">
+        <parent link="base_link"/>
+        <child link="framework"/>
+        <origin xyz="0.0 0.0 ${base_z_size-0.01}" rpy="0.0 0.0 0.0"/>
+    </joint>
+    
+
+    <link name="lidar">
+        <visual>
+            <geometry>
+                <mesh filename="../meshes/rplidarA3.dae"/>
+                <box size="0.1 0.1 0.08" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.1 0.1 0.08" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <joint name="framework2lidar" type="fixed">
+        <parent link="framework"/>
+        <child link="lidar"/>
+        <origin xyz="0.0 0.0 ${framework_z_size - lidar_z_size/2 - 0.01}" rpy="0.0 0.0 3.14"/>
+    </joint>
+
+    <link name="camera">
+        <visual>
+            <geometry>
+                <mesh filename="../meshes/astrapro.dae"/>
+                <box size="0.1 0.04 0.075" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.1 0.04 0.075" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <joint name="base2camera" type="fixed">
+        <parent link="base_link"/>
+        <child link="camera"/>
+        <origin xyz="0.34 0.0 ${base_z_size/2 + camera_z_size/2}" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+
+    <link name="imu">
+        <visual>
+            <geometry>
+                <mesh filename="../meshes/imu.dae"/>
+                <box size="0.1 0.04 0.075" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.1 0.04 0.075" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <joint name="base2imu" type="fixed">
+        <parent link="base_link"/>
+        <child link="imu"/>
+        <origin xyz="0.24 0.05 ${base_z_size/2 + imu_z_size/2}" rpy="0.0 0.0 1.57"/>
+    </joint>
+
+
+    <!-- Scout wheel macros -->
+    <!-- wheel labeled from 0 to 3, conter-clockwise, starting from front right wheel -->
+    <!-- motor 1 and 2 (left side) are mechanically installed in a reversed direction -->
+    <xacro:scout_wheel_type1 wheel_prefix="front_right">
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+    </xacro:scout_wheel_type1>
+    <xacro:scout_wheel_type2 wheel_prefix="front_left">
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    </xacro:scout_wheel_type2>
+    <xacro:scout_wheel_type1 wheel_prefix="rear_left">
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    </xacro:scout_wheel_type1>
+    <xacro:scout_wheel_type2 wheel_prefix="rear_right">
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+    </xacro:scout_wheel_type2>
+
+</robot>
